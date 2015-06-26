@@ -1,0 +1,811 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
+<title>ArcGIS Online State Example Sites</title>
+
+<link rel="stylesheet" href="//js.arcgis.com/3.13compact/dijit/themes/claro/claro.css">
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+<style>
+  html, body {
+    font-family: Lucida Sans, Lucida Grande, Arial !important;
+    font-size: 14px;
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+  }
+
+  .esri-item-gallery .esri-item-container {
+    float: left;
+    text-align: center;
+    padding: 10px;
+    width: 204px;
+    display: inline-block;
+  }
+
+  .esri-item-gallery .esri-image {
+    width: 200px;
+    height: 133px;
+    border: 2px solid gray;
+    border-radius: 5px;
+  }
+
+  .esri-item-gallery .esri-null-image {
+    line-height: 133px;
+    text-align: center;
+    color: #999999;
+  }
+
+  .esri-item-gallery .esri-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .esri-item-gallery .esri-null-title {
+    color: #999999;
+  }
+
+  .action {
+    color: blue;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+</style>
+
+<script src="//js.arcgis.com/3.13compact/"></script>
+<script>
+  require([
+    "esri/arcgis/Portal", "esri/request", "esri/config", "esri/arcgis/OAuthInfo", "esri/urlUtils", "esri/IdentityManager",
+    "dojo/dom-style", "dojo/dom-attr", "dojo/dom", "dojo/on", "dojo/_base/array", "esri/tasks/locationproviders/StandardGeographyQueryLocationProvider",
+        "esri/tasks/geoenrichment/StandardGeographyQueryTask", "esri/tasks/geoenrichment/GeographyQuery", "esri/graphic",
+    "dojo/domReady!"
+  ], function (arcgisPortal, esriRequest, esriConfig, OAuthInfo, urlUtils, esriId,
+    domStyle, domAttr, dom, on, arrayUtils, StandardGeographyQueryLocationProvider, StandardGeographyQueryTask, GeographyQuery, Graphic){
+    var portal;
+    esriConfig.defaults.io.proxyUrl = "proxy/proxy.ashx";
+    // valid credentials needed to access the geoenrichment service from ArcGIS Online
+   urlUtils.addProxyRule({
+      proxyUrl: "proxy/proxy.ashx",
+      urlPrefix: "geoenrich.arcgis.com"
+   });
+    
+    var stateGroups = [
+  {
+    "State":"Alabama",
+    "ID":"7e92ae3628b244ea9b644c5ca7ee0eb8"
+  },
+  {
+    "State":"Alaska",
+    "ID":"e91d6dbd098d49309327c5cb7419142b"
+  },
+  {
+    "State":"Arizona",
+    "ID":"f0ecede94627407ea8dd8ca507764718"
+  },
+  {
+    "State":"Arkansas",
+    "ID":"d76733e97f95451596f776aff7e31694"
+  },
+  {
+    "State":"California",
+    "ID":"552bd6a65e294357b2fddd0b544f3f2b"
+  },
+  {
+    "State":"Colorado",
+    "ID":"d6e2bad5a6174c11a6dd10141e19ccbb"
+  },
+  {
+    "State":"Connecticut",
+    "ID":"1dac1bb44f754c06ba7a9227f1469348"
+  },
+  {
+    "State":"Delaware",
+    "ID":"a2c13ae7e3634108a74da24e01fd7ba4"
+  },
+  {
+    "State":"Florida",
+    "ID":"f0fc44e064be40579f3a9a94115504fe"
+  },
+  {
+    "State":"Georgia",
+    "ID":"65925c768c314c6195d3aeed29a630db"
+  },
+  {
+    "State":"Hawaii",
+    "ID":"51df9b362062407b918899eb91fa316a"
+  },
+  {
+    "State":"Idaho",
+    "ID":"0435fc668b90496a87ebff40208dc390"
+  },
+  {
+    "State":"Illinois",
+    "ID":"0e93131313ed4b97aec6ce9498c95a47"
+  },
+  {
+    "State":"Indiana",
+    "ID":"9d3f474646ea48cb901da5228e5549c2"
+  },
+  {
+    "State":"Iowa",
+    "ID":"dbabe9b385ec4efd949b050fa3473502"
+  },
+  {
+    "State":"Kansas",
+    "ID":"0a76abfef40e4b90a75bbc4d1eb34a0b"
+  },
+  {
+    "State":"Kentucky",
+    "ID":"43d784dacf1142a7957ff97d49015ecc"
+  },
+  {
+    "State":"Louisiana",
+    "ID":"6db4b9d019d34b4d876cf861a22c0b8d"
+  },
+  {
+    "State":"Maine",
+    "ID":"4ea4fb6920e949c89246c3d23b3145da"
+  },
+  {
+    "State":"Maryland",
+    "ID":"d5c7ac3db9784672984bce311669e794"
+  },
+  {
+    "State":"Massachusetts",
+    "ID":"fe64db024bfe4613b49e54e2498b77c9"
+  },
+  {
+    "State":"Michigan",
+    "ID":"b5220aa4fdde4e398bc5f5ecc9e513df"
+  },
+  {
+    "State":"Minnesota",
+    "ID":"bbcce41cf19d48749a6c78dae4ae8591"
+  },
+  {
+    "State":"Mississippi",
+    "ID":"a0b2a6f5de6c4cc3b9556873354a967e"
+  },
+  {
+    "State":"Missouri",
+    "ID":"a7c4c37cad354a4095a44aa2e69b2c9e"
+  },
+  {
+    "State":"Montana",
+    "ID":"351f1d0bf41c419586cb89dc8407dfe2"
+  },
+  {
+    "State":"Nebraska",
+    "ID":"b6dfdbefa1884270a05a3c871f2cc23e"
+  },
+  {
+    "State":"Nevada",
+    "ID":"a3ac44db75114cae8cbc5e74b1bd4b64"
+  },
+  {
+    "State":"New Hampshire",
+    "ID":"6e095aee6b984b0f8198e8bd347d6180"
+  },
+  {
+    "State":"New Jersey",
+    "ID":"eb7cada3aeec4178b6b74965ba3c38d1"
+  },
+  {
+    "State":"New Mexico",
+    "ID":"d3cbdb8e2d194d7bb8fd667547ddfe6a"
+  },
+  {
+    "State":"New York",
+    "ID":"b9e0bcf886964a35828bb037e09770ed"
+  },
+  {
+    "State":"North Carolina",
+    "ID":"425cfdac4f224dd5954a8d632a577196"
+  },
+  {
+    "State":"North Dakota",
+    "ID":"2c15b4da77cd44bfbcb6575fea73faba"
+  },
+  {
+    "State":"Ohio",
+    "ID":"fba69c7dd5544b7e84f7f782be3e64e5"
+  },
+  {
+    "State":"Oklahoma",
+    "ID":"2a080cfd196d480aba575107ffaae774"
+  },
+  {
+    "State":"Oregon",
+    "ID":"1b8db25b013f4071b4e0c61fb8ca6373"
+  },
+  {
+    "State":"Pennsylvania",
+    "ID":"c23d229899374ddb837ef54792de4fb8"
+  },
+  {
+    "State":"Rhode Island",
+    "ID":"ee083711be38416c8cad274f72819467"
+  },
+  {
+    "State":"South Carolina",
+    "ID":"f8ddba3e35024795a06995496585da74"
+  },
+  {
+    "State":"South Dakota",
+    "ID":"1e60a1372f2f470a846285937b59511f"
+  },
+  {
+    "State":"Tennessee",
+    "ID":"ae81f5cb2b6046caac8c847869ba3e08"
+  },
+  {
+    "State":"Texas",
+    "ID":"50956f7e7c464596af7459580958eb16"
+  },
+  {
+    "State":"Utah",
+    "ID":"068133ddf63a4e4bb150941e1fb708f4"
+  },
+  {
+    "State":"Vermont",
+    "ID":"b3caed926c244fa8be28e399eb9e4813"
+  },
+  {
+    "State":"Virginia",
+    "ID":"01cea08210b54e7ea39c265f14d6d73f"
+  },
+  {
+    "State":"Washington",
+    "ID":"8d29fede517846d3803b05f3d16506a3"
+  },
+  {
+    "State":"West Virginia",
+    "ID":"55bbf97de807442b9dced2edd160b788"
+  },
+  {
+    "State":"Wisconsin",
+    "ID":"bc732e1648d44fbb9b23a8aa91066fdc"
+  },
+  {
+    "State":"Wyoming",
+    "ID":"a151403b740c47dd9f4ae2cf739e4669"
+  }
+];
+    
+    var info = new OAuthInfo({
+      appId: "3YB4HQNxBO2gosrA",
+      // Uncomment this line to prevent the user's signed in state from being shared
+      // with other apps on the same domain with the same authNamespace value.
+      //authNamespace: "portal_oauth_inline",
+      popup: false
+    });
+    esriId.registerOAuthInfos([info]);
+
+    esriId.checkSignInStatus(info.portalUrl).then(
+      function (){
+        portal = new arcgisPortal.Portal("https://www.arcgis.com");
+        portal.signIn().then(
+          function (portalUser){
+            console.log("Signed in to the portal: ", portalUser);
+            if (portalUser.orgId == "mDUBwXYmCImffPXw") {
+              console.log("all good");
+              domStyle.set("itemGallery", "display", "block");
+              domStyle.set("anonymousPanel", "display", "none");
+              domStyle.set("personalizedPanel", "display", "block");
+              domAttr.set(dom.byId("firstname"), "value",  portalUser.firstName);
+              domAttr.set(dom.byId("lastname"), "value",  portalUser.lastName);
+              domAttr.set("userId", "innerHTML", portalUser.fullName);
+              //displayItems();
+            } else {
+              esriId.destroyCredentials();
+              portal.signOut();
+              console.log("You are not a member of the state sales org");
+              domStyle.set("errorPanel", "display", "block");
+              domStyle.set("anonymousPanel", "display", "block");
+              domStyle.set("personalizedPanel", "display", "none");
+              domStyle.set("itemGallery", "display", "none");
+            }
+          }
+        ).otherwise(
+          function (error){
+            console.log("Error occurred while signing in: ", error);
+          }
+        );
+      }
+    ).otherwise(
+      function (){
+        // Anonymous view
+        domStyle.set("anonymousPanel", "display", "block");
+        domStyle.set("personalizedPanel", "display", "none");
+        domStyle.set("itemGallery", "display", "none");
+        domStyle.set("errorPanel", "display", "none");
+      }
+    );
+
+    on(dom.byId("sign-in"), "click", function (){
+      console.log("click", arguments);
+      // user will be redirected to OAuth Sign In page
+      esriId.getCredential(info.portalUrl);
+    });
+
+    on(dom.byId("sign-out"), "click", function (){
+      esriId.destroyCredentials();
+      window.location.reload();
+    });
+    
+    on(dom.byId("submit"), "click", function (){
+      addWebMap();
+    });
+
+    function displayItems(){
+      new arcgisPortal.Portal("https://www.arcgis.com").signIn().then(
+        function (portalUser){
+          console.log("Signed in to the portal: ", portalUser);
+
+          domAttr.set("userId", "innerHTML", portalUser.fullName);
+          domStyle.set("anonymousPanel", "display", "none");
+          domStyle.set("personalizedPanel", "display", "block");
+
+          queryPortal(portalUser);
+        }
+      ).otherwise(
+        function (error){
+          console.log("Error occurred while signing in: ", error);
+        }
+      );
+    }
+
+    function queryPortal(portalUser){
+      var portal = portalUser.portal;
+
+      //See list of valid item types here:  http://www.arcgis.com/apidocs/rest/index.html?itemtypes.html
+      //See search reference here:  http://www.arcgis.com/apidocs/rest/index.html?searchreference.html
+      var queryParams = {
+        q: "owner:" + portalUser.username,
+        sortField: "numViews",
+        sortOrder: "desc",
+        num: 20
+      };
+
+      portal.queryItems(queryParams).then(createGallery);
+    }
+
+	function addWebMap() {
+    dom.byId("status").innerHTML = "";
+    $('#myModal').modal({
+      keyboard: false,
+      backdrop: 'static'
+    })
+    $("#myModal").modal('show');
+    console.log(dom.byId("category").value);
+    var cats = getSelectValues(dom.byId("category"));
+    var types = getSelectValues(dom.byId("type"));
+    var subs = getSelectValues(dom.byId("subcat"));
+    var tags = cats.concat(types).concat(subs);
+    tags.push(dom.byId("state").value);
+    tags.push(dom.byId("firstname").value + " " + dom.byId("lastname").value);
+    
+    var tagString = tags.join();
+		var requestHandle = esriRequest({
+            //url: portalUser.userContentUrl + "/addItem",
+            url: "https://www.arcgis.com/sharing/rest/content/users/EsriStateSales/addItem",
+            content: {
+              "f": "json",
+			  "type": "Web Mapping Application",
+			  "typeKeywords": "Web Mapping Application",
+			  "url": dom.byId("hyperlink").value,
+			  //"text": "text 123",
+			  "title": dom.byId("title").value,
+			  "tags": tagString,
+			  "description": dom.byId("state").value + " example uploaded by " + dom.byId("firstname").value + " " + dom.byId("lastname").value + "<br/>" + dom.byId("description").value,
+			  "snippet": dom.byId("summary").value},
+			callbackParamName: "callback"},
+			{usePost: true, useProxy: true});
+		dom.byId("status").innerHTML += "Adding item to state sales portal...<br/>"	
+		requestHandle.then(
+			function(response) {
+			  console.log("Success: ", response.id);
+        dom.byId("status").innerHTML += "Item " + response.id + " created successfully.<br/>"
+        dom.byId("status").innerHTML += "Sharing item...<br/>";
+        shareItem(response.id);
+		  }, function(error) {
+			  console.log("Error: ", error.message);
+        dom.byId("status").innerHTML += "Error creating item: " + error.message + "<br/>";
+		  });
+      
+         var graphic = new Graphic();
+         graphic.setAttributes({"State":dom.byId("state").value, "App_URL":dom.byId("hyperlink").value});
+         var standardGeographyQueryTask = new StandardGeographyQueryTask();
+
+        var query = new GeographyQuery({
+          countryID: "US",
+          generalizationLevel: "6",
+          geographyLayerIDs: ["US.States"],
+          returnGeometry: "true",
+          where: dom.byId("state").value
+        });
+
+        standardGeographyQueryTask.execute(query).then(function(result) {
+          // do something with result.featureSet
+          dom.byId("status").innerHTML += "Finding State geometry from geoenrichment service...<br/>";
+          console.log(result);
+          result.featureSet.features[0].attributes.f2 = dom.byId("state").value;
+          result.featureSet.features[0].attributes.f6 = dom.byId("hyperlink").value;
+          var requestHandle1 = esriRequest({
+                  //url: portalUser.userContentUrl + "/addItem",
+                  url: "http://services6.arcgis.com/mDUBwXYmCImffPXw/arcgis/rest/services/StateSuccesses/FeatureServer/0/addFeatures",
+                  content: {
+                    "f": "json",
+              "features": dojo.toJson(result.featureSet.features[0])},
+            callbackParamName: "callback"},
+            {usePost: true});
+            
+          requestHandle1.then(
+            function(response) {
+              dom.byId("status").innerHTML += "Successfully added record to feature service...<br/>";
+              console.log("Success: ", response.id);
+            }, function(error) {
+              console.log("Error: ", error.message);
+            });
+        });
+}	
+	
+  
+  
+  function shareItem(id) {
+    require(["dojo/_base/array"], function(array){
+      filteredArray = array.filter(stateGroups, function(item){
+        return item.State == dom.byId("state").value;
+      });
+      dom.byId("status").innerHTML += "Sharing to group: " + filteredArray[0].State + "<br/>";
+      console.log(filteredArray[0].ID);
+    });
+
+    var allGroups = [];
+    allGroups.push(filteredArray[0].ID);
+    allGroups.push("b5c3fa44e9d243a3b2425b0f35210beb");
+  
+    var requestHandle = esriRequest({
+            //url: portalUser.userContentUrl + "/addItem",
+            //url: "proxy/proxy.ashx?https://www.arcgis.com/sharing/rest/content/users/EsriStateSales/items/" + id + "/share",
+            url: "http://statesales.maps.arcgis.com/sharing/rest/content/users/EsriStateSales/shareItems",
+            content: {
+              "f": "json",
+              "items": id,
+              "everyone": false,
+              "account": true,
+              "groups": allGroups.join(",")},
+			callbackParamName: "callback"},
+			{usePost: true, useProxy: true});
+    
+    requestHandle.then(
+			function(response) {
+			  console.log("Success: ", response.id);
+        dom.byId("status").innerHTML += "Successfully shared to groups...<br/>";
+		  }, function(error) {
+        dom.byId("status").innerHTML += "Error sharing: " + error.message;
+			  console.log("Error: ", error.message);
+		  }
+    );	 
+  }
+  
+    function createGallery(items){
+      var htmlFragment = "";
+
+      arrayUtils.forEach(items.results, function (item){
+        htmlFragment += (
+        "<div class=\"esri-item-container\">" +
+        (
+          item.thumbnailUrl ?
+          "<div class=\"esri-image\" style=\"background-image:url(" + item.thumbnailUrl + ");\"></div>" :
+            "<div class=\"esri-image esri-null-image\">Thumbnail not available</div>"
+        ) +
+        (
+          item.title ?
+          "<div class=\"esri-title\">" + (item.title || "") + "</div>" :
+            "<div class=\"esri-title esri-null-title\">Title not available</div>"
+        ) +
+        "</div>"
+        );
+      });
+
+      dom.byId("itemGallery").innerHTML += htmlFragment;
+    }
+  });
+  
+    // Return an array of the selected opion values
+    // select is an HTML select element
+    function getSelectValues(theSelect) {
+      var result = [];
+      var options = theSelect && theSelect.options;
+      var opt;
+
+      for (var i=0, iLen=options.length; i<iLen; i++) {
+        opt = options[i];
+
+        if (opt.selected) {
+          result.push(opt.value || opt.text);
+        }
+      }
+      return result;
+    }
+  </script>
+</head>
+
+<body class="claro">
+
+  <div id="anonymousPanel" style="display: none; padding: 5px; text-align: center;">
+    <span id="sign-in" class="action">Sign In</span> to manage your state reference web applications.
+  </div>
+
+  <div id="personalizedPanel" style="display: none; padding: 5px; text-align: center;">
+    Welcome <span id="userId" style="font-weight: bold;"></span>
+     - 
+    <span id="sign-out" class="action">Sign Out</span>
+  </div>
+  
+  <div id="errorPanel" style="display: none; padding: 5px; text-align: center;">
+    You must be a member of the State Sales Org (statesales.maps.arcgis.com)
+  </div>
+  
+  <!--<div id="itemGallery" class="esri-item-gallery" style="width: 100%;"></div>-->
+  <div id="itemGallery" class="esri-item-gallery" style="width: 100%;display:none">
+</br>
+  <div class='container'>
+    <div class='panel panel-primary dialog-panel'>
+      <div class='panel-heading'>
+        <h2><img src="images/esri.png" height="65"><p></p>State Sales Team Product Organizer</h2>
+      </div>
+    </div>
+  </div>
+    <div class='panel-body'>
+  <form class="form-horizontal" action="">
+<fieldset>
+
+<!-- Form Name -->
+<legend><center><font color="red">All fields are required to submit</font></center></legend>
+
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="title">Title</label>  
+  <div class="col-md-4">
+  <input id="title" name="textinput" type="text" placeholder="Title" class="form-control input-md" required="">  
+  </div>
+</div>
+
+<!-- Select Basic -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="state">State</label>
+  <div class="col-md-4">
+    <select id="state" name="selectbasic" class="form-control"required="">
+      <option></option>
+      <option>Alabama</option>
+      <option>Alaska</option>
+      <option>Arizona</option>
+      <option>Alabama</option>
+      <option>Alaska</option>
+      <option>Arizona</option>
+      <option>Arkansas</option>
+      <option>California</option>
+      <option>Colorado</option>
+      <option>Connecticut</option>
+      <option>Delaware</option>
+      <option>Florida</option>
+      <option>Georgia</option>
+      <option>Hawaii</option>
+      <option>Idaho</option>
+      <option>Illinois</option>
+      <option>Indiana</option>
+      <option>Iowa</option>
+      <option>Kansas</option>
+      <option>Kentucky</option>
+      <option>Lousiana</option>
+      <option>Maine</option>
+      <option>Maryland</option>
+      <option>Massachusetts</option>
+      <option>Michigan</option>
+      <option>Minnesota</option>
+      <option>Mississippi</option>
+      <option>Missouri</option>
+      <option>Montana</option>
+      <option>Nebraska</option>
+      <option>Nevada</option>
+      <option>New Hampshire</option>
+      <option>New Jersey</option>
+      <option>New Mexico</option>
+      <option>New York</option>
+      <option>North Carolina</option>
+      <option>North Dakota</option>
+      <option>Ohio</option>
+      <option>Oklahoma</option>
+      <option>Oregon</option>
+      <option>Pennsylvania</option>
+      <option>Rhode Island</option>
+      <option>South Carolina</option>
+      <option>South Dakota</option>
+      <option>Tennessee</option>
+      <option>Texas</option>
+      <option>Utah</option>
+      <option>Vermont</option>
+      <option>Virginia</option>
+      <option>Washington</option>
+      <option>West Virginia</option>
+      <option>Wisconsin</option>
+      <option>Wyoming</option>
+    </select>
+  </div>
+</div>
+
+<!-- Select Multiple -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="type">Type</label>
+  <div class="col-md-4">
+    <select id="type" name="selectmultiple" class="form-control" multiple="multiple"required="">
+      <option></option>
+      <option>Story Map</option>
+      <option>Template</option>
+      <option>Web Map</option>
+      <option>Web App</option>
+    </select>
+  </div>
+</div>
+
+<!-- Select Multiple -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="category">Category</label>
+  <div class="col-md-4">
+    <select id="category" name="selectmultiple" class="form-control" multiple="multiple"required="">
+      <option></option>  
+      <option>Climate</option>
+      <option>Economic</option>
+      <option>Education</option>
+      <option>Emergency Management</option>
+      <option>Environmental</option>
+      <option>Health</option>
+      <option>Infrastructure</option>
+      <option>Transportation</option>
+    </select>
+  </div>
+</div>
+
+<!-- Select Multiple -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="subcat">Sub Category</label>
+  <div class="col-md-4">
+    <select id="subcat" name="selectmultiple" class="form-control" multiple="multiple"required="">
+      <option></option>
+      <option>Bridges</option>
+      <option>Buildings</option>
+      <option>Coast</option>
+      <option>Conservation</option>
+      <option>Cyber</option>
+      <option>Dams</option>
+      <option>Earthquake</option>
+      <option>Fire</option>
+      <option>Fish</option>
+      <option>Flood</option>
+      <option>Forest</option>
+      <option>HIPAA</option>
+      <option>Hurricane</option>
+      <option>Invasive Species</option>
+      <option>Lakes</option>
+      <option>Ocean</option>
+      <option>Pipelines</option>
+      <option>Preservation</option>
+      <option>Riot</option>
+      <option>Rivers</option>
+      <option>Roads</option>
+      <option>Social</option>
+      <option>Tornado</option>
+      <option>Tsunami</option>
+      <option>Volcano</option>
+      <option>Wetlands</option>
+      <option>Wildlife</option>
+    </select>
+  </div>
+</div>
+
+<!--
+<div class='form-group'>
+  <label class='col-md-4 control-label ' for='id_checkin'>Date Published</label>
+    <div class='col-md-5'>
+      <div class='col-md-3'>
+        <div class='form-group internal input-group'>
+          <form action="date_form" method="get" accept-charset="utf-8" class="cf">
+            <label for="date"></label> 
+            <input type="date" name="date"required="">
+        </div>
+      </div>      
+    </div>
+</div>
+-->
+<!-- Text input-->
+<div class='form-group'>
+  <label class='col-md-4 control-label' for='firstname'>Name</label>
+    <div class='col-md-8'>          
+      <div class='col-md-3 indent-small'>
+        <div class='form-group internal'>
+          <input id="firstname" name="textinput" type="text" placeholder="First Name" class="form-control input-md" required="">
+        </div>
+      </div>
+      <div class='col-md-3 indent-small'>
+        <div class='form-group internal'>
+          <input id="lastname" name="textinput" type="text" placeholder="Last Name" class="form-control input-md" required="">
+        </div>
+      </div>
+    </div>
+</div>
+
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="hyperlink">Hyperlink</label>  
+  <div class="col-md-5">
+  <input id="hyperlink" name="textinput" type="text" placeholder="Copy and paste Hyperlink" class="form-control input-md" required="">    
+  </div>
+</div>
+
+<!-- Textarea -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="summary">Summary</label>
+  <div class="col-md-5">                     
+    <textarea class="form-control" id="summary" rows="3" name="textarea"placeholder="Additional comments"required=""></textarea>
+  </div>
+</div>
+
+<!-- Textarea -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="description">Description</label>
+  <div class="col-md-5">                     
+    <textarea class="form-control" id="description" rows="3" name="textarea"placeholder="Additional comments"required=""></textarea>
+  </div>
+</div>
+
+<!-- File Button --> 
+
+<div class="form-group">
+  <label class="col-md-4 control-label" for="filebutton">Select Thumbnail</label>
+  <div class="col-md-4">
+    <input id="filebutton" name="filebutton" class="input-file" type="file" required="">
+  </div>
+</div>
+
+
+<!-- Button -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="singlebutton"></label>
+  <div class="col-md-3">
+    <button id="submit" name="singlebutton" class="btn btn-primary">Submit</button>
+  </div>
+</div>
+
+</form>
+</fieldset>
+</div>
+</div>
+<div class="modal fade" id="myModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Processing...</h4>
+      </div>
+      <div class="modal-body" id="status">
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <!--<button type="button" class="btn btn-primary">Save changes</button>-->
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+</body>
+</html>
