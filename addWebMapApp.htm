@@ -65,228 +65,278 @@
   require([
     "esri/arcgis/Portal", "esri/request", "esri/config", "esri/arcgis/OAuthInfo", "esri/urlUtils", "esri/IdentityManager",
     "dojo/dom-style", "dojo/dom-attr", "dojo/dom", "dojo/on", "dojo/_base/array", "esri/tasks/locationproviders/StandardGeographyQueryLocationProvider",
-        "esri/tasks/geoenrichment/StandardGeographyQueryTask", "esri/tasks/geoenrichment/GeographyQuery", "esri/graphic",
+    "esri/tasks/geoenrichment/StandardGeographyQueryTask", "esri/tasks/geoenrichment/GeographyQuery", "esri/graphic", "dojo/dom-construct",
     "dojo/domReady!"
   ], function (arcgisPortal, esriRequest, esriConfig, OAuthInfo, urlUtils, esriId,
-    domStyle, domAttr, dom, on, arrayUtils, StandardGeographyQueryLocationProvider, StandardGeographyQueryTask, GeographyQuery, Graphic){
+    domStyle, domAttr, dom, on, arrayUtils, StandardGeographyQueryLocationProvider, StandardGeographyQueryTask, GeographyQuery, Graphic, domConstruct){
+    
     var portal;
     esriConfig.defaults.io.proxyUrl = "proxy/proxy.ashx";
+    
     // valid credentials needed to access the geoenrichment service from ArcGIS Online
-   urlUtils.addProxyRule({
+    urlUtils.addProxyRule({
       proxyUrl: "proxy/proxy.ashx",
       urlPrefix: "geoenrich.arcgis.com"
-   });
+    });
+    
+    var nationalGalleryGroupID = "b5c3fa44e9d243a3b2425b0f35210beb";
+    var oAuthAppId = "UlhzzthLZjnTWbRF";
+    var orgId = "mDUBwXYmCImffPXw";
+   
+    var categoryGroups = [
+      {
+        "Group":"Health and Social Services",
+        "ID":"f8c265f271024de2ba55b793890ced25"
+      },
+      {
+        "Group":"Natural Resources and the Environment",
+        "ID":"5ade852ef3b24fec901ada44ac89e449"
+      },
+      {
+        "Group":"Technology",
+        "ID":"2e0f7c68ebd245df84c4a10351d9ac76"
+      },
+      {
+        "Group":"Homeland Security, Law Enforcement and Public Safety",
+        "ID":"e39b2c08b8f84bf391cd151952cb9be0"
+      },
+      {
+        "Group":"Infrastructure",
+        "ID":"649f4d7375804c52a1234d0594d19567"
+      },
+      {
+        "Group":"Agriculture and Rural Development",
+        "ID":"7dd029e23c5e42ee9fec0b38e35697df"
+      },
+      {
+        "Group":"Budget and Tax",
+        "ID":"c05e0ff726b541a1b88ede4932c7bf9d"
+      },
+      {
+        "Group":"Economic Development, Housing and Growth",
+        "ID":"1565dbd2448148dfa6a1745151822732"
+      },
+      {
+        "Group":"Education",
+        "ID":"a54c37623365441699b72748dcffe534"
+      },
+      {
+        "Group":"Administration, Election and Redistricting",
+        "ID":"2f18c14ed9a84c57b5e1f2a4f5f146c9"
+      }
+    ];
     
     var stateGroups = [
-  {
-    "State":"Alabama",
-    "ID":"7e92ae3628b244ea9b644c5ca7ee0eb8"
-  },
-  {
-    "State":"Alaska",
-    "ID":"e91d6dbd098d49309327c5cb7419142b"
-  },
-  {
-    "State":"Arizona",
-    "ID":"f0ecede94627407ea8dd8ca507764718"
-  },
-  {
-    "State":"Arkansas",
-    "ID":"d76733e97f95451596f776aff7e31694"
-  },
-  {
-    "State":"California",
-    "ID":"552bd6a65e294357b2fddd0b544f3f2b"
-  },
-  {
-    "State":"Colorado",
-    "ID":"d6e2bad5a6174c11a6dd10141e19ccbb"
-  },
-  {
-    "State":"Connecticut",
-    "ID":"1dac1bb44f754c06ba7a9227f1469348"
-  },
-  {
-    "State":"Delaware",
-    "ID":"a2c13ae7e3634108a74da24e01fd7ba4"
-  },
-  {
-    "State":"Florida",
-    "ID":"f0fc44e064be40579f3a9a94115504fe"
-  },
-  {
-    "State":"Georgia",
-    "ID":"65925c768c314c6195d3aeed29a630db"
-  },
-  {
-    "State":"Hawaii",
-    "ID":"51df9b362062407b918899eb91fa316a"
-  },
-  {
-    "State":"Idaho",
-    "ID":"0435fc668b90496a87ebff40208dc390"
-  },
-  {
-    "State":"Illinois",
-    "ID":"0e93131313ed4b97aec6ce9498c95a47"
-  },
-  {
-    "State":"Indiana",
-    "ID":"9d3f474646ea48cb901da5228e5549c2"
-  },
-  {
-    "State":"Iowa",
-    "ID":"dbabe9b385ec4efd949b050fa3473502"
-  },
-  {
-    "State":"Kansas",
-    "ID":"0a76abfef40e4b90a75bbc4d1eb34a0b"
-  },
-  {
-    "State":"Kentucky",
-    "ID":"43d784dacf1142a7957ff97d49015ecc"
-  },
-  {
-    "State":"Louisiana",
-    "ID":"6db4b9d019d34b4d876cf861a22c0b8d"
-  },
-  {
-    "State":"Maine",
-    "ID":"4ea4fb6920e949c89246c3d23b3145da"
-  },
-  {
-    "State":"Maryland",
-    "ID":"d5c7ac3db9784672984bce311669e794"
-  },
-  {
-    "State":"Massachusetts",
-    "ID":"fe64db024bfe4613b49e54e2498b77c9"
-  },
-  {
-    "State":"Michigan",
-    "ID":"b5220aa4fdde4e398bc5f5ecc9e513df"
-  },
-  {
-    "State":"Minnesota",
-    "ID":"bbcce41cf19d48749a6c78dae4ae8591"
-  },
-  {
-    "State":"Mississippi",
-    "ID":"a0b2a6f5de6c4cc3b9556873354a967e"
-  },
-  {
-    "State":"Missouri",
-    "ID":"a7c4c37cad354a4095a44aa2e69b2c9e"
-  },
-  {
-    "State":"Montana",
-    "ID":"351f1d0bf41c419586cb89dc8407dfe2"
-  },
-  {
-    "State":"Nebraska",
-    "ID":"b6dfdbefa1884270a05a3c871f2cc23e"
-  },
-  {
-    "State":"Nevada",
-    "ID":"a3ac44db75114cae8cbc5e74b1bd4b64"
-  },
-  {
-    "State":"New Hampshire",
-    "ID":"6e095aee6b984b0f8198e8bd347d6180"
-  },
-  {
-    "State":"New Jersey",
-    "ID":"eb7cada3aeec4178b6b74965ba3c38d1"
-  },
-  {
-    "State":"New Mexico",
-    "ID":"d3cbdb8e2d194d7bb8fd667547ddfe6a"
-  },
-  {
-    "State":"New York",
-    "ID":"b9e0bcf886964a35828bb037e09770ed"
-  },
-  {
-    "State":"North Carolina",
-    "ID":"425cfdac4f224dd5954a8d632a577196"
-  },
-  {
-    "State":"North Dakota",
-    "ID":"2c15b4da77cd44bfbcb6575fea73faba"
-  },
-  {
-    "State":"Ohio",
-    "ID":"fba69c7dd5544b7e84f7f782be3e64e5"
-  },
-  {
-    "State":"Oklahoma",
-    "ID":"2a080cfd196d480aba575107ffaae774"
-  },
-  {
-    "State":"Oregon",
-    "ID":"1b8db25b013f4071b4e0c61fb8ca6373"
-  },
-  {
-    "State":"Pennsylvania",
-    "ID":"c23d229899374ddb837ef54792de4fb8"
-  },
-  {
-    "State":"Rhode Island",
-    "ID":"ee083711be38416c8cad274f72819467"
-  },
-  {
-    "State":"South Carolina",
-    "ID":"f8ddba3e35024795a06995496585da74"
-  },
-  {
-    "State":"South Dakota",
-    "ID":"1e60a1372f2f470a846285937b59511f"
-  },
-  {
-    "State":"Tennessee",
-    "ID":"ae81f5cb2b6046caac8c847869ba3e08"
-  },
-  {
-    "State":"Texas",
-    "ID":"50956f7e7c464596af7459580958eb16"
-  },
-  {
-    "State":"Utah",
-    "ID":"068133ddf63a4e4bb150941e1fb708f4"
-  },
-  {
-    "State":"Vermont",
-    "ID":"b3caed926c244fa8be28e399eb9e4813"
-  },
-  {
-    "State":"Virginia",
-    "ID":"01cea08210b54e7ea39c265f14d6d73f"
-  },
-  {
-    "State":"Washington",
-    "ID":"8d29fede517846d3803b05f3d16506a3"
-  },
-  {
-    "State":"West Virginia",
-    "ID":"55bbf97de807442b9dced2edd160b788"
-  },
-  {
-    "State":"Wisconsin",
-    "ID":"bc732e1648d44fbb9b23a8aa91066fdc"
-  },
-  {
-    "State":"Wyoming",
-    "ID":"a151403b740c47dd9f4ae2cf739e4669"
-  }
-];
+      {
+        "State":"Alabama",
+        "ID":"7e92ae3628b244ea9b644c5ca7ee0eb8"
+      },
+      {
+        "State":"Alaska",
+        "ID":"e91d6dbd098d49309327c5cb7419142b"
+      },
+      {
+        "State":"Arizona",
+        "ID":"f0ecede94627407ea8dd8ca507764718"
+      },
+      {
+        "State":"Arkansas",
+        "ID":"d76733e97f95451596f776aff7e31694"
+      },
+      {
+        "State":"California",
+        "ID":"552bd6a65e294357b2fddd0b544f3f2b"
+      },
+      {
+        "State":"Colorado",
+        "ID":"d6e2bad5a6174c11a6dd10141e19ccbb"
+      },
+      {
+        "State":"Connecticut",
+        "ID":"1dac1bb44f754c06ba7a9227f1469348"
+      },
+      {
+        "State":"Delaware",
+        "ID":"a2c13ae7e3634108a74da24e01fd7ba4"
+      },
+      {
+        "State":"Florida",
+        "ID":"f0fc44e064be40579f3a9a94115504fe"
+      },
+      {
+        "State":"Georgia",
+        "ID":"65925c768c314c6195d3aeed29a630db"
+      },
+      {
+        "State":"Hawaii",
+        "ID":"51df9b362062407b918899eb91fa316a"
+      },
+      {
+        "State":"Idaho",
+        "ID":"0435fc668b90496a87ebff40208dc390"
+      },
+      {
+        "State":"Illinois",
+        "ID":"0e93131313ed4b97aec6ce9498c95a47"
+      },
+      {
+        "State":"Indiana",
+        "ID":"9d3f474646ea48cb901da5228e5549c2"
+      },
+      {
+        "State":"Iowa",
+        "ID":"dbabe9b385ec4efd949b050fa3473502"
+      },
+      {
+        "State":"Kansas",
+        "ID":"0a76abfef40e4b90a75bbc4d1eb34a0b"
+      },
+      {
+        "State":"Kentucky",
+        "ID":"43d784dacf1142a7957ff97d49015ecc"
+      },
+      {
+        "State":"Louisiana",
+        "ID":"6db4b9d019d34b4d876cf861a22c0b8d"
+      },
+      {
+        "State":"Maine",
+        "ID":"4ea4fb6920e949c89246c3d23b3145da"
+      },
+      {
+        "State":"Maryland",
+        "ID":"d5c7ac3db9784672984bce311669e794"
+      },
+      {
+        "State":"Massachusetts",
+        "ID":"fe64db024bfe4613b49e54e2498b77c9"
+      },
+      {
+        "State":"Michigan",
+        "ID":"b5220aa4fdde4e398bc5f5ecc9e513df"
+      },
+      {
+        "State":"Minnesota",
+        "ID":"bbcce41cf19d48749a6c78dae4ae8591"
+      },
+      {
+        "State":"Mississippi",
+        "ID":"a0b2a6f5de6c4cc3b9556873354a967e"
+      },
+      {
+        "State":"Missouri",
+        "ID":"a7c4c37cad354a4095a44aa2e69b2c9e"
+      },
+      {
+        "State":"Montana",
+        "ID":"351f1d0bf41c419586cb89dc8407dfe2"
+      },
+      {
+        "State":"Nebraska",
+        "ID":"b6dfdbefa1884270a05a3c871f2cc23e"
+      },
+      {
+        "State":"Nevada",
+        "ID":"a3ac44db75114cae8cbc5e74b1bd4b64"
+      },
+      {
+        "State":"New Hampshire",
+        "ID":"6e095aee6b984b0f8198e8bd347d6180"
+      },
+      {
+        "State":"New Jersey",
+        "ID":"eb7cada3aeec4178b6b74965ba3c38d1"
+      },
+      {
+        "State":"New Mexico",
+        "ID":"d3cbdb8e2d194d7bb8fd667547ddfe6a"
+      },
+      {
+        "State":"New York",
+        "ID":"b9e0bcf886964a35828bb037e09770ed"
+      },
+      {
+        "State":"North Carolina",
+        "ID":"425cfdac4f224dd5954a8d632a577196"
+      },
+      {
+        "State":"North Dakota",
+        "ID":"2c15b4da77cd44bfbcb6575fea73faba"
+      },
+      {
+        "State":"Ohio",
+        "ID":"fba69c7dd5544b7e84f7f782be3e64e5"
+      },
+      {
+        "State":"Oklahoma",
+        "ID":"2a080cfd196d480aba575107ffaae774"
+      },
+      {
+        "State":"Oregon",
+        "ID":"1b8db25b013f4071b4e0c61fb8ca6373"
+      },
+      {
+        "State":"Pennsylvania",
+        "ID":"c23d229899374ddb837ef54792de4fb8"
+      },
+      {
+        "State":"Rhode Island",
+        "ID":"ee083711be38416c8cad274f72819467"
+      },
+      {
+        "State":"South Carolina",
+        "ID":"f8ddba3e35024795a06995496585da74"
+      },
+      {
+        "State":"South Dakota",
+        "ID":"1e60a1372f2f470a846285937b59511f"
+      },
+      {
+        "State":"Tennessee",
+        "ID":"ae81f5cb2b6046caac8c847869ba3e08"
+      },
+      {
+        "State":"Texas",
+        "ID":"50956f7e7c464596af7459580958eb16"
+      },
+      {
+        "State":"Utah",
+        "ID":"068133ddf63a4e4bb150941e1fb708f4"
+      },
+      {
+        "State":"Vermont",
+        "ID":"b3caed926c244fa8be28e399eb9e4813"
+      },
+      {
+        "State":"Virginia",
+        "ID":"01cea08210b54e7ea39c265f14d6d73f"
+      },
+      {
+        "State":"Washington",
+        "ID":"8d29fede517846d3803b05f3d16506a3"
+      },
+      {
+        "State":"West Virginia",
+        "ID":"55bbf97de807442b9dced2edd160b788"
+      },
+      {
+        "State":"Wisconsin",
+        "ID":"bc732e1648d44fbb9b23a8aa91066fdc"
+      },
+      {
+        "State":"Wyoming",
+        "ID":"a151403b740c47dd9f4ae2cf739e4669"
+      }
+    ];
     
     var info = new OAuthInfo({
-      appId: "3YB4HQNxBO2gosrA",
+      appId: oAuthAppId,
       // Uncomment this line to prevent the user's signed in state from being shared
       // with other apps on the same domain with the same authNamespace value.
       //authNamespace: "portal_oauth_inline",
       popup: false
     });
+    
     esriId.registerOAuthInfos([info]);
 
     esriId.checkSignInStatus(info.portalUrl).then(
@@ -295,7 +345,7 @@
         portal.signIn().then(
           function (portalUser){
             console.log("Signed in to the portal: ", portalUser);
-            if (portalUser.orgId == "mDUBwXYmCImffPXw") {
+            if (portalUser.orgId == orgId) {
               console.log("all good");
               domStyle.set("itemGallery", "display", "block");
               domStyle.set("anonymousPanel", "display", "none");
@@ -303,7 +353,6 @@
               domAttr.set(dom.byId("firstname"), "value",  portalUser.firstName);
               domAttr.set(dom.byId("lastname"), "value",  portalUser.lastName);
               domAttr.set("userId", "innerHTML", portalUser.fullName);
-              //displayItems();
             } else {
               esriId.destroyCredentials();
               portal.signOut();
@@ -344,184 +393,211 @@
     on(dom.byId("submit"), "click", function (){
       addWebMap();
     });
+    
+    //on(dom.byId("thumbnailBtnFile"), "click", function (){
+    //  console.log("file");
+    //});
 
-    function displayItems(){
-      new arcgisPortal.Portal("https://www.arcgis.com").signIn().then(
-        function (portalUser){
-          console.log("Signed in to the portal: ", portalUser);
+    $('#thumbnailBtnURL').change( function() {
+      domStyle.set('thumbDivURL', "display", ""); // to show
+      domStyle.set('thumbDiv', "display", "none"); // to hide
+      //var width = domStyle.get("thumbDiv", "display");
+    });
+    
+    $('#thumbnailBtnFile').change( function() {
+      domStyle.set('thumbDivURL', "display", "none"); // to show
+      domStyle.set('thumbDiv', "display", ""); // to hide 
+    });
+    
+    //$('#btn-group button').click(function() {
+    //  $(this).addClass('active').siblings().removeClass('active');
+    //  console.log("foo");
+    //    // TODO: insert whatever you want to do with $(this) here
+    //});
+        
+    function addWebMap() {
+      var itemId = "";
+      dom.byId("status").innerHTML = "";
+      $('#myModal').modal({
+        keyboard: false,
+        backdrop: 'static'
+      })
+      $("#myModal").modal('show');
+      console.log(dom.byId("category").value);
+      var cats = getSelectValues(dom.byId("category"));
+      var types = getSelectValues(dom.byId("type"));
+      var subs = getSelectValues(dom.byId("subcat"));
+      var tags = cats.concat(types).concat(subs);
+      tags.push(dom.byId("state").value);
+      tags.push(dom.byId("firstname").value + " " + dom.byId("lastname").value);
+      tags = tags.concat(dom.byId("tags").value.split(","));
+      var tagString = tags.join();
+      
+      var theForm1;
+      theForm1 = domConstruct.create("form");
+      var input = domConstruct.create("input", {name: "title"}, theForm1);
+      input.value = dom.byId("title").value;
+      var input1 = domConstruct.create("input", {name: "description"}, theForm1);
+      input1.value = dom.byId("description").value + "<br/>" + dom.byId("state").value + " example uploaded by " + dom.byId("firstname").value + " " + dom.byId("lastname").value;
+      var input2 = domConstruct.create("input", {name: "tags"}, theForm1);
+      input2.value = tagString;
+      var input3 = domConstruct.create("input", {name: "f"}, theForm1);
+      input3.value = "json";
+      var input4 = domConstruct.create("input", {name: "url"}, theForm1);
+      input4.value = dom.byId("hyperlink").value;
+      var input5 = domConstruct.create("input", {name: "type"}, theForm1);
+      input5.value = "Web Mapping Application";
+      var input6 = domConstruct.create("input", {name: "typeKeywords"}, theForm1);
+      input6.value = "Web Mapping Application";
+      var input7 = domConstruct.create("input", {name: "snippet"}, theForm1);
+      input7.value = dom.byId("summary").value;
+      
+      if ($('#lblthumbnailBtnFile').hasClass('active')) {
+        domConstruct.place("thumbnail", theForm1, 0);
+      } else {
+        var input8 = domConstruct.create("input", {name: "thumbnailURL"}, theForm1);
+        input8.value = dom.byId("thumbnailURL").value;
+      }
+            
+      var requestHandle = esriRequest({
+        url: "https://www.arcgis.com/sharing/rest/content/users/EsriStateSales/addItem",
+        //content: {
+          "f": "json",
+          //"type": "Web Mapping Application",
+          //"typeKeywords": "Web Mapping Application",
+          //"url": dom.byId("hyperlink").value,
+          //"text": "text 123",
+          //"title": dom.byId("title").value,
+          //"tags": tagString,
+          //"description": dom.byId("description").value + "<br/>" + dom.byId("state").value + " example uploaded by " + dom.byId("firstname").value + " " + dom.byId("lastname").value,
+          //"snippet": dom.byId("summary").value
+        //},
+        //form: dom.byId("theForm"),
+        form: theForm1,
+        callbackParamName: "callback"},
+        {usePost: true, useProxy: true, disableIdentityLookup: true}
+      );
+      
+      dom.byId("status").innerHTML += "Adding item to state sales portal...<br/>"	
+      
+      requestHandle.then(
+        function(response) {
+          domConstruct.destroy(dom.byId("thumbnail"));
+          domConstruct.create("input", {type: "file", name: "thumbnail", id:"thumbnail"}, "thumbDiv");
+          //domConstruct.place("thumbnail", dom.byId("theForm"), 0);
+          console.log("Success: ", response.id);
+          var itemId = response.id;
+          dom.byId("status").innerHTML += "Item <a href='http://statesales.maps.arcgis.com/home/item.html?id=" + response.id + "' target='_blank'>" + response.id + "</a> created successfully.<br/>"
+          var graphic = new Graphic();
+          graphic.setAttributes({"State":dom.byId("state").value, "App_URL":dom.byId("hyperlink").value});
+          var standardGeographyQueryTask = new StandardGeographyQueryTask();
 
-          domAttr.set("userId", "innerHTML", portalUser.fullName);
-          domStyle.set("anonymousPanel", "display", "none");
-          domStyle.set("personalizedPanel", "display", "block");
+          var query = new GeographyQuery({
+            countryID: "US",
+            generalizationLevel: "6",
+            geographyLayerIDs: ["US.States"],
+            returnGeometry: "true",
+            where: dom.byId("state").value
+          });
 
-          queryPortal(portalUser);
-        }
-      ).otherwise(
-        function (error){
-          console.log("Error occurred while signing in: ", error);
+          standardGeographyQueryTask.execute(query).then(function(result) {
+            // do something with result.featureSet
+            dom.byId("status").innerHTML += "Finding State geometry from geoenrichment service...<br/>";
+            console.log(result);
+            result.featureSet.features[0].attributes.FullName = "State of " + dom.byId("state").value;
+            result.featureSet.features[0].attributes.State = dom.byId("state").value;
+            result.featureSet.features[0].attributes.App_Name = dom.byId("title").value;
+            result.featureSet.features[0].attributes.App_Agency = dom.byId("agency").value;
+            result.featureSet.features[0].attributes.App_URL = dom.byId("hyperlink").value;
+            result.featureSet.features[0].attributes.BusinessArea = dom.byId("category").value;
+            result.featureSet.features[0].attributes.FirstName = dom.byId("firstname").value;
+            result.featureSet.features[0].attributes.LastName = dom.byId("lastname").value;
+            result.featureSet.features[0].attributes.ItemID = response.id;
+            result.featureSet.features[0].attributes.Type = getSelectValues(dom.byId("type")).join(",");
+            result.featureSet.features[0].attributes.Category = getSelectValues(dom.byId("category")).join(",");
+            result.featureSet.features[0].attributes.SubCategory = getSelectValues(dom.byId("subcat")).join(",");
+            result.featureSet.features[0].attributes.Additional_Tags = dom.byId("tags").value;
+            result.featureSet.features[0].attributes.ItemDescription = dom.byId("description").value;
+            result.featureSet.features[0].attributes.ItemSummary = dom.byId("summary").value;
+            
+            var requestHandle1 = esriRequest({
+              url: "http://services6.arcgis.com/mDUBwXYmCImffPXw/arcgis/rest/services/State_Successes/FeatureServer/0/addFeatures",
+              content: {
+                "f": "json",
+                "features": dojo.toJson(result.featureSet.features[0])},
+              callbackParamName: "callback"},
+              {usePost: true}
+            );
+              
+            requestHandle1.then(
+              function(response) {
+                dom.byId("status").innerHTML += "Successfully added record to feature service... <a href='http://statesales.maps.arcgis.com/home/webmap/viewer.html?url=http://services6.arcgis.com/mDUBwXYmCImffPXw/arcgis/rest/services/State_Successes/FeatureServer/0' target='_blank'>Map IT</a><br/>";
+                console.log("Success: ", response.id);
+                dom.byId("status").innerHTML += "Sharing item...<br/>";
+                shareItem(itemId);
+              }, function(error) {
+                console.log("Error: ", error.message);
+              }
+            );
+          });
+        }, function(error) {
+          console.log("Error: ", error.message);
+          dom.byId("status").innerHTML += "Error creating item: " + error.message + "<br/>";
         }
       );
-    }
-
-    function queryPortal(portalUser){
-      var portal = portalUser.portal;
-
-      //See list of valid item types here:  http://www.arcgis.com/apidocs/rest/index.html?itemtypes.html
-      //See search reference here:  http://www.arcgis.com/apidocs/rest/index.html?searchreference.html
-      var queryParams = {
-        q: "owner:" + portalUser.username,
-        sortField: "numViews",
-        sortOrder: "desc",
-        num: 20
-      };
-
-      portal.queryItems(queryParams).then(createGallery);
-    }
-
-	function addWebMap() {
-    dom.byId("status").innerHTML = "";
-    $('#myModal').modal({
-      keyboard: false,
-      backdrop: 'static'
-    })
-    $("#myModal").modal('show');
-    console.log(dom.byId("category").value);
-    var cats = getSelectValues(dom.byId("category"));
-    var types = getSelectValues(dom.byId("type"));
-    var subs = getSelectValues(dom.byId("subcat"));
-    var tags = cats.concat(types).concat(subs);
-    tags.push(dom.byId("state").value);
-    tags.push(dom.byId("firstname").value + " " + dom.byId("lastname").value);
-    
-    var tagString = tags.join();
-		var requestHandle = esriRequest({
-            //url: portalUser.userContentUrl + "/addItem",
-            url: "https://www.arcgis.com/sharing/rest/content/users/EsriStateSales/addItem",
-            content: {
-              "f": "json",
-			  "type": "Web Mapping Application",
-			  "typeKeywords": "Web Mapping Application",
-			  "url": dom.byId("hyperlink").value,
-			  //"text": "text 123",
-			  "title": dom.byId("title").value,
-			  "tags": tagString,
-			  "description": dom.byId("state").value + " example uploaded by " + dom.byId("firstname").value + " " + dom.byId("lastname").value + "<br/>" + dom.byId("description").value,
-			  "snippet": dom.byId("summary").value},
-			callbackParamName: "callback"},
-			{usePost: true, useProxy: true});
-		dom.byId("status").innerHTML += "Adding item to state sales portal...<br/>"	
-		requestHandle.then(
-			function(response) {
-			  console.log("Success: ", response.id);
-        dom.byId("status").innerHTML += "Item " + response.id + " created successfully.<br/>"
-        dom.byId("status").innerHTML += "Sharing item...<br/>";
-        shareItem(response.id);
-		  }, function(error) {
-			  console.log("Error: ", error.message);
-        dom.byId("status").innerHTML += "Error creating item: " + error.message + "<br/>";
-		  });
-      
-         var graphic = new Graphic();
-         graphic.setAttributes({"State":dom.byId("state").value, "App_URL":dom.byId("hyperlink").value});
-         var standardGeographyQueryTask = new StandardGeographyQueryTask();
-
-        var query = new GeographyQuery({
-          countryID: "US",
-          generalizationLevel: "6",
-          geographyLayerIDs: ["US.States"],
-          returnGeometry: "true",
-          where: dom.byId("state").value
-        });
-
-        standardGeographyQueryTask.execute(query).then(function(result) {
-          // do something with result.featureSet
-          dom.byId("status").innerHTML += "Finding State geometry from geoenrichment service...<br/>";
-          console.log(result);
-          result.featureSet.features[0].attributes.f2 = dom.byId("state").value;
-          result.featureSet.features[0].attributes.f6 = dom.byId("hyperlink").value;
-          var requestHandle1 = esriRequest({
-                  //url: portalUser.userContentUrl + "/addItem",
-                  url: "http://services6.arcgis.com/mDUBwXYmCImffPXw/arcgis/rest/services/StateSuccesses/FeatureServer/0/addFeatures",
-                  content: {
-                    "f": "json",
-              "features": dojo.toJson(result.featureSet.features[0])},
-            callbackParamName: "callback"},
-            {usePost: true});
-            
-          requestHandle1.then(
-            function(response) {
-              dom.byId("status").innerHTML += "Successfully added record to feature service...<br/>";
-              console.log("Success: ", response.id);
-            }, function(error) {
-              console.log("Error: ", error.message);
-            });
-        });
-}	
+    }	
 	
-  
-  
-  function shareItem(id) {
-    require(["dojo/_base/array"], function(array){
-      filteredArray = array.filter(stateGroups, function(item){
-        return item.State == dom.byId("state").value;
+    function shareItem(id) {
+      require(["dojo/_base/array"], function(array){
+        filteredArray = array.filter(stateGroups, function(item){
+          return item.State == dom.byId("state").value;
+        });
+        //dom.byId("status").innerHTML += "Sharing to group: " + filteredArray[0].State + "<br/>";
+        dom.byId("status").innerHTML += "Sharing to group: <a href='http://statesales.maps.arcgis.com/home/group.html?id=" + filteredArray[0].ID + "' target='_blank'>" + filteredArray[0].State + "</a><br/>";
+        console.log(filteredArray[0].ID);
+        
+        filteredArray2 = array.filter(categoryGroups, function(item){
+          return item.Group == dom.byId("category").value;
+        });
+        dom.byId("status").innerHTML += "Sharing to group: <a href='http://statesales.maps.arcgis.com/home/group.html?id=" + filteredArray2[0].ID + "' target='_blank'>" + filteredArray2[0].Group + "</a><br/>";
+        console.log(filteredArray2[0].ID);
       });
-      dom.byId("status").innerHTML += "Sharing to group: " + filteredArray[0].State + "<br/>";
-      console.log(filteredArray[0].ID);
-    });
 
-    var allGroups = [];
-    allGroups.push(filteredArray[0].ID);
-    allGroups.push("b5c3fa44e9d243a3b2425b0f35210beb");
-  
-    var requestHandle = esriRequest({
-            //url: portalUser.userContentUrl + "/addItem",
-            //url: "proxy/proxy.ashx?https://www.arcgis.com/sharing/rest/content/users/EsriStateSales/items/" + id + "/share",
-            url: "http://statesales.maps.arcgis.com/sharing/rest/content/users/EsriStateSales/shareItems",
-            content: {
-              "f": "json",
-              "items": id,
-              "everyone": false,
-              "account": true,
-              "groups": allGroups.join(",")},
-			callbackParamName: "callback"},
-			{usePost: true, useProxy: true});
+      var allGroups = [];
+      allGroups.push(filteredArray[0].ID);
+      allGroups.push(filteredArray2[0].ID);
+      //National Gallery group
+      dom.byId("status").innerHTML += "Sharing to group: <a href='http://statesales.maps.arcgis.com/home/group.html?id=" + nationalGalleryGroupID + "' target='_blank'>National Gallery</a><br/>";
+      allGroups.push(nationalGalleryGroupID);
     
-    requestHandle.then(
-			function(response) {
-			  console.log("Success: ", response.id);
-        dom.byId("status").innerHTML += "Successfully shared to groups...<br/>";
-		  }, function(error) {
-        dom.byId("status").innerHTML += "Error sharing: " + error.message;
-			  console.log("Error: ", error.message);
-		  }
-    );	 
-  }
-  
-    function createGallery(items){
-      var htmlFragment = "";
-
-      arrayUtils.forEach(items.results, function (item){
-        htmlFragment += (
-        "<div class=\"esri-item-container\">" +
-        (
-          item.thumbnailUrl ?
-          "<div class=\"esri-image\" style=\"background-image:url(" + item.thumbnailUrl + ");\"></div>" :
-            "<div class=\"esri-image esri-null-image\">Thumbnail not available</div>"
-        ) +
-        (
-          item.title ?
-          "<div class=\"esri-title\">" + (item.title || "") + "</div>" :
-            "<div class=\"esri-title esri-null-title\">Title not available</div>"
-        ) +
-        "</div>"
-        );
-      });
-
-      dom.byId("itemGallery").innerHTML += htmlFragment;
+      var requestHandle = esriRequest({
+        //url: "http://statesales.maps.arcgis.com/sharing/rest/content/users/EsriStateSales/shareItems",
+        url: "http://statesales.maps.arcgis.com/sharing/rest/content/users/EsriStateSales/items/" + id + "/share",
+        content: {
+          "f": "json",
+          "items": id,
+          "everyone": false,
+          "org": true,
+          "groups": allGroups.join(",")},
+        callbackParamName: "callback"},
+        {usePost: true, useProxy: true, disableIdentityLookup: true}
+      );
+      
+      requestHandle.then(
+        function(response) {
+          console.log("Success: ", response);
+          dom.byId("status").innerHTML += "Successfully shared to groups...<br/>";
+          if (response.notSharedWith.length > 0) {
+            dom.byId("status").innerHTML += "Items were not shared to these groups: " + response.notSharedWith.join(",") + "<br/>";
+          }
+        }, function(error) {
+          dom.byId("status").innerHTML += "Error sharing: " + error.message;
+          console.log("Error: ", error.message);
+        }
+      );	 
     }
-  });
   
-    // Return an array of the selected opion values
+    // Return an array of the selected option values
     // select is an HTML select element
     function getSelectValues(theSelect) {
       var result = [];
@@ -537,7 +613,8 @@
       }
       return result;
     }
-  </script>
+});
+</script>
 </head>
 
 <body class="claro">
@@ -555,257 +632,315 @@
   <div id="errorPanel" style="display: none; padding: 5px; text-align: center;">
     You must be a member of the State Sales Org (statesales.maps.arcgis.com)
   </div>
-  
+
   <!--<div id="itemGallery" class="esri-item-gallery" style="width: 100%;"></div>-->
   <div id="itemGallery" class="esri-item-gallery" style="width: 100%;display:none">
-</br>
-  <div class='container'>
-    <div class='panel panel-primary dialog-panel'>
-      <div class='panel-heading'>
-        <h2><img src="images/esri.png" height="65"><p></p>State Sales Team Product Organizer</h2>
-      </div>
-    </div>
-  </div>
-    <div class='panel-body'>
-  <form class="form-horizontal" action="">
-<fieldset>
 
-<!-- Form Name -->
-<legend><center><font color="red">All fields are required to submit</font></center></legend>
-
-<!-- Text input-->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="title">Title</label>  
-  <div class="col-md-4">
-  <input id="title" name="textinput" type="text" placeholder="Title" class="form-control input-md" required="">  
-  </div>
-</div>
-
-<!-- Select Basic -->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="state">State</label>
-  <div class="col-md-4">
-    <select id="state" name="selectbasic" class="form-control"required="">
-      <option></option>
-      <option>Alabama</option>
-      <option>Alaska</option>
-      <option>Arizona</option>
-      <option>Alabama</option>
-      <option>Alaska</option>
-      <option>Arizona</option>
-      <option>Arkansas</option>
-      <option>California</option>
-      <option>Colorado</option>
-      <option>Connecticut</option>
-      <option>Delaware</option>
-      <option>Florida</option>
-      <option>Georgia</option>
-      <option>Hawaii</option>
-      <option>Idaho</option>
-      <option>Illinois</option>
-      <option>Indiana</option>
-      <option>Iowa</option>
-      <option>Kansas</option>
-      <option>Kentucky</option>
-      <option>Lousiana</option>
-      <option>Maine</option>
-      <option>Maryland</option>
-      <option>Massachusetts</option>
-      <option>Michigan</option>
-      <option>Minnesota</option>
-      <option>Mississippi</option>
-      <option>Missouri</option>
-      <option>Montana</option>
-      <option>Nebraska</option>
-      <option>Nevada</option>
-      <option>New Hampshire</option>
-      <option>New Jersey</option>
-      <option>New Mexico</option>
-      <option>New York</option>
-      <option>North Carolina</option>
-      <option>North Dakota</option>
-      <option>Ohio</option>
-      <option>Oklahoma</option>
-      <option>Oregon</option>
-      <option>Pennsylvania</option>
-      <option>Rhode Island</option>
-      <option>South Carolina</option>
-      <option>South Dakota</option>
-      <option>Tennessee</option>
-      <option>Texas</option>
-      <option>Utah</option>
-      <option>Vermont</option>
-      <option>Virginia</option>
-      <option>Washington</option>
-      <option>West Virginia</option>
-      <option>Wisconsin</option>
-      <option>Wyoming</option>
-    </select>
-  </div>
-</div>
-
-<!-- Select Multiple -->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="type">Type</label>
-  <div class="col-md-4">
-    <select id="type" name="selectmultiple" class="form-control" multiple="multiple"required="">
-      <option></option>
-      <option>Story Map</option>
-      <option>Template</option>
-      <option>Web Map</option>
-      <option>Web App</option>
-    </select>
-  </div>
-</div>
-
-<!-- Select Multiple -->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="category">Category</label>
-  <div class="col-md-4">
-    <select id="category" name="selectmultiple" class="form-control" multiple="multiple"required="">
-      <option></option>  
-      <option>Climate</option>
-      <option>Economic</option>
-      <option>Education</option>
-      <option>Emergency Management</option>
-      <option>Environmental</option>
-      <option>Health</option>
-      <option>Infrastructure</option>
-      <option>Transportation</option>
-    </select>
-  </div>
-</div>
-
-<!-- Select Multiple -->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="subcat">Sub Category</label>
-  <div class="col-md-4">
-    <select id="subcat" name="selectmultiple" class="form-control" multiple="multiple"required="">
-      <option></option>
-      <option>Bridges</option>
-      <option>Buildings</option>
-      <option>Coast</option>
-      <option>Conservation</option>
-      <option>Cyber</option>
-      <option>Dams</option>
-      <option>Earthquake</option>
-      <option>Fire</option>
-      <option>Fish</option>
-      <option>Flood</option>
-      <option>Forest</option>
-      <option>HIPAA</option>
-      <option>Hurricane</option>
-      <option>Invasive Species</option>
-      <option>Lakes</option>
-      <option>Ocean</option>
-      <option>Pipelines</option>
-      <option>Preservation</option>
-      <option>Riot</option>
-      <option>Rivers</option>
-      <option>Roads</option>
-      <option>Social</option>
-      <option>Tornado</option>
-      <option>Tsunami</option>
-      <option>Volcano</option>
-      <option>Wetlands</option>
-      <option>Wildlife</option>
-    </select>
-  </div>
-</div>
-
-<!--
-<div class='form-group'>
-  <label class='col-md-4 control-label ' for='id_checkin'>Date Published</label>
-    <div class='col-md-5'>
-      <div class='col-md-3'>
-        <div class='form-group internal input-group'>
-          <form action="date_form" method="get" accept-charset="utf-8" class="cf">
-            <label for="date"></label> 
-            <input type="date" name="date"required="">
-        </div>
-      </div>      
-    </div>
-</div>
--->
-<!-- Text input-->
-<div class='form-group'>
-  <label class='col-md-4 control-label' for='firstname'>Name</label>
-    <div class='col-md-8'>          
-      <div class='col-md-3 indent-small'>
-        <div class='form-group internal'>
-          <input id="firstname" name="textinput" type="text" placeholder="First Name" class="form-control input-md" required="">
-        </div>
-      </div>
-      <div class='col-md-3 indent-small'>
-        <div class='form-group internal'>
-          <input id="lastname" name="textinput" type="text" placeholder="Last Name" class="form-control input-md" required="">
+    <div class='container'>
+      <div class='panel panel-primary dialog-panel'>
+        <div class='panel-heading'>
+          <h2><img src="images/esri.png" height="65"><p></p>State Sales Team Successful Customer Apps Entry Tool</h2>
         </div>
       </div>
     </div>
-</div>
+    
+    <div class="container">
 
-<!-- Text input-->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="hyperlink">Hyperlink</label>  
-  <div class="col-md-5">
-  <input id="hyperlink" name="textinput" type="text" placeholder="Copy and paste Hyperlink" class="form-control input-md" required="">    
-  </div>
-</div>
+      <div class='panel-body'>
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#new1" aria-controls="new1" role="tab" data-toggle="tab">New</a></li>
+            <li role="presentation"><a href="#editPane" aria-controls="editPane" role="tab" data-toggle="tab">Edit</a></li>
+          </ul>
+        </div>
+        <div class="tab-content">
+          <div role="tabpanel" class="tab-pane active" id="new1">
+            <form id="theForm" class="form-horizontal" action="#">
+      
+              <!-- Form Name -->
+              <legend><center><font color="red">All fields are required to submit</font></center></legend>
 
-<!-- Textarea -->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="summary">Summary</label>
-  <div class="col-md-5">                     
-    <textarea class="form-control" id="summary" rows="3" name="textarea"placeholder="Additional comments"required=""></textarea>
-  </div>
-</div>
+              <!-- Text input-->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="title">Title</label>  
+                <div class="col-md-4">
+                  <input id="title" name="title" type="text" placeholder="Title" class="form-control input-md" required="">  
+                </div>
+              </div>
 
-<!-- Textarea -->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="description">Description</label>
-  <div class="col-md-5">                     
-    <textarea class="form-control" id="description" rows="3" name="textarea"placeholder="Additional comments"required=""></textarea>
-  </div>
-</div>
+              <!-- Text input-->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="agency">Agency Name</label>  
+                <div class="col-md-4">
+                <input id="agency" name="agency" type="text" placeholder="Agency Name (i.e. Dept. of Agriculture)" class="form-control input-md" required="">  
+                </div>
+              </div>
 
-<!-- File Button --> 
+              <!-- Select Basic -->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="state">State</label>
+                <div class="col-md-4">
+                  <select id="state" name="selectbasic" class="form-control" required="">
+                    <option></option>
+                    <option>Alabama</option>
+                    <option>Alaska</option>
+                    <option>Arizona</option>
+                    <option>Arkansas</option>
+                    <option>California</option>
+                    <option>Colorado</option>
+                    <option>Connecticut</option>
+                    <option>Delaware</option>
+                    <option>Florida</option>
+                    <option>Georgia</option>
+                    <option>Hawaii</option>
+                    <option>Idaho</option>
+                    <option>Illinois</option>
+                    <option>Indiana</option>
+                    <option>Iowa</option>
+                    <option>Kansas</option>
+                    <option>Kentucky</option>
+                    <option>Louisiana</option>
+                    <option>Maine</option>
+                    <option>Maryland</option>
+                    <option>Massachusetts</option>
+                    <option>Michigan</option>
+                    <option>Minnesota</option>
+                    <option>Mississippi</option>
+                    <option>Missouri</option>
+                    <option>Montana</option>
+                    <option>Nebraska</option>
+                    <option>Nevada</option>
+                    <option>New Hampshire</option>
+                    <option>New Jersey</option>
+                    <option>New Mexico</option>
+                    <option>New York</option>
+                    <option>North Carolina</option>
+                    <option>North Dakota</option>
+                    <option>Ohio</option>
+                    <option>Oklahoma</option>
+                    <option>Oregon</option>
+                    <option>Pennsylvania</option>
+                    <option>Rhode Island</option>
+                    <option>South Carolina</option>
+                    <option>South Dakota</option>
+                    <option>Tennessee</option>
+                    <option>Texas</option>
+                    <option>Utah</option>
+                    <option>Vermont</option>
+                    <option>Virginia</option>
+                    <option>Washington</option>
+                    <option>West Virginia</option>
+                    <option>Wisconsin</option>
+                    <option>Wyoming</option>
+                  </select>
+                </div>
+              </div>
 
-<div class="form-group">
-  <label class="col-md-4 control-label" for="filebutton">Select Thumbnail</label>
-  <div class="col-md-4">
-    <input id="filebutton" name="filebutton" class="input-file" type="file" required="">
-  </div>
-</div>
+              <!-- Select Multiple -->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="type">Type</label>
+                <div class="col-md-4">
+                  <select id="type" name="type" class="form-control" multiple="multiple" required="">
+                    <option></option>
+                    <option>Story Map</option>
+                    <option>State Solution Template</option>
+                    <option>Web Map</option>
+                    <option>Web App</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Select Multiple -->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="category">Category</label>
+                <div class="col-md-4">
+                  <select id="category" name="category" class="form-control" required="">
+                    <option></option>  
+                    <option>Administration, Election and Redistricting</option>
+                    <option>Agriculture and Rural Development</option>
+                    <option>Budget and Tax</option>
+                    <option>Economic Development, Housing and Growth</option>
+                    <option>Education</option>
+                    <option>Health and Social Services</option>
+                    <option>Homeland Security, Law Enforcement and Public Safety</option>
+                    <option>Infrastructure</option>
+                    <option>Natural Resources and the Environment</option>
+                    <option>Technology</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Select Multiple -->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="subcat">Sub Category</label>
+                <div class="col-md-4">
+                  <select id="subcat" name="subcat" class="form-control" multiple="multiple" required="">
+                    <option></option>
+                    <option>Bridges</option>
+                    <option>Buildings</option>
+                    <option>Conservation</option>
+                    <option>Dams</option>
+                    <option>Drought</option>
+                    <option>Earthquake</option>
+                    <option>Fire</option>
+                    <option>Fish</option>
+                    <option>Flood</option>
+                    <option>Forests</option>
+                    <option>HAZMAT</option>
+                    <option>HIPAA</option>
+                    <option>Hurricane</option>
+                    <option>Inspection</option>
+                    <option>Invasive Species</option>
+                    <option>Lakes</option>
+                    <option>Ocean</option>
+                    <option>Pipelines</option>
+                    <option>Preservation</option>
+                    <option>Railroad</option>
+                    <option>Rivers</option>
+                    <option>Roads</option>
+                    <option>Safety</option>
+                    <option>Social</option>
+                    <option>Tornado</option>
+                    <option>Tsunami</option>
+                    <option>Utilities</option>
+                    <option>Volcano</option>
+                    <option>Wetlands</option>
+                    <option>Wildlife</option>
+                  </select>
+                </div>
+              </div>
+
+              <!--
+              <div class='form-group'>
+                <label class='col-md-4 control-label ' for='id_checkin'>Date Published</label>
+                  <div class='col-md-5'>
+                    <div class='col-md-3'>
+                      <div class='form-group internal input-group'>
+                        <form action="date_form" method="get" accept-charset="utf-8" class="cf">
+                          <label for="date"></label> 
+                          <input type="date" name="date"required="">
+                      </div>
+                    </div>      
+                  </div>
+              </div>
+              -->
+              <!-- Text input-->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="tags">Additional Tags</label>  
+                <div class="col-md-5">
+                <input id="tags" name="tags" type="text" placeholder="Enter any additional tags (comma separated)" class="form-control input-md">    
+                </div>
+              </div>
+
+              <!-- Text input-->
+              <div class='form-group'>
+                <label class='col-md-4 control-label' for='firstname'>Name</label>
+                  <div class='col-md-8'>          
+                    <div class='col-md-3 indent-small'>
+                      <div class='form-group internal'>
+                        <input id="firstname" name="textinput" type="text" placeholder="First Name" class="form-control input-md" required="">
+                      </div>
+                    </div>
+                    <div class='col-md-3 indent-small'>
+                      <div class='form-group internal'>
+                        <input id="lastname" name="textinput" type="text" placeholder="Last Name" class="form-control input-md" required="">
+                      </div>
+                    </div>
+                  </div>
+              </div>
+
+              <!-- Text input-->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="url">Hyperlink</label>  
+                <div class="col-md-5">
+                <input id="hyperlink" name="url" type="text" placeholder="Copy and paste Hyperlink" class="form-control input-md" required="">    
+                </div>
+              </div>
+
+              <!-- Textarea -->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="summary">Summary</label>
+                <div class="col-md-5">                     
+                  <textarea class="form-control" id="summary" rows="3" name="summary" placeholder="Additional comments"required=""></textarea>
+                </div>
+              </div>
+
+              <!-- Textarea -->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="description">Description</label>
+                <div class="col-md-5">                     
+                  <textarea class="form-control" id="description" rows="3" name="description" placeholder="Additional comments"required=""></textarea>
+                </div>
+              </div>
+
+              <!-- File Button --> 
+
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="btn-group">Select Thumbnail</label>
+                <div class="col-md-5">
+                  <!--<div class="btn-group" id="btn-group" >
+                      <button type="button" class="btn active" id="thumbnailBtnURL" name="thumbnailBtn" />URL</button>
+                      <button type="button" class="btn" id="thumbnailBtnFile" name="thumbnailBtn" />File</button>
+                  </div>-->
+                  <div class="btn-group" id="btn-group" data-toggle="buttons">
+                    <label id="lblthumbnailBtnURL" class="btn btn-primary active" for="thumbnailBtnURL" >
+                      <input type="radio" name="thumbnailBtn" id="thumbnailBtnURL" value="URL" selected /> URL
+                    </label>
+                    <label id="lblthumbnailBtnFile" class="btn btn-primary" for="thumbnailBtnFile" >
+                      <input type="radio" name="thumbnailBtn" id="thumbnailBtnFile" value="File"/> File
+                    </label>
+                    <!--<button type="button" id="thumbnailBtnURL" class="thumbnailBtn btn btn-URL" value="1">URL</button>
+                    <button type="button" id="thumbnailBtnFile" class="thumbnailBtn btn btn-File" value="0">File</button>-->
+                  </div>
+                </div>  
+              </div>
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="thumbnailBtnURL"></label>
+                <div class="col-md-5">
+                  <div id="thumbDivURL">
+                    <input id="thumbnailURL" name="thumbnailURL" class="form-control input-md" type="text" placeholder="Paste accessible URL to image">
+                  </div>
+                  <div class="" id="thumbDiv" style="width: 100%;display:none">
+                    <input id="thumbnail" name="thumbnail" class="input-file" type="file">
+                  </div>
+                </div>
+              </div>
 
 
-<!-- Button -->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="singlebutton"></label>
-  <div class="col-md-3">
-    <button id="submit" name="singlebutton" class="btn btn-primary">Submit</button>
-  </div>
-</div>
-
-</form>
-</fieldset>
-</div>
-</div>
-<div class="modal fade" id="myModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">Processing...</h4>
+              <!-- Button -->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="singlebutton"></label>
+                <div class="col-md-3">
+                  <button type="button" id="submit" name="singlebutton" class="btn btn-primary">Submit</button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div role="tabpanel" class="tab-pane" id="editPane">
+            <div class="col-md-4">Edit</div>
+          </div>
       </div>
-      <div class="modal-body" id="status">
-        
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <!--<button type="button" class="btn btn-primary">Save changes</button>-->
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
+    </div>
+  </div>
+
+  <div class="modal fade" id="myModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Processing...</h4>
+        </div>
+        <div class="modal-body" id="status">
+          
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <!--<button type="button" class="btn btn-primary">Save changes</button>-->
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
 </body>
 </html>
